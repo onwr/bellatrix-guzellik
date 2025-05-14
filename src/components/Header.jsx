@@ -3,9 +3,15 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FaInstagram, FaPhoneAlt, FaBars, FaTimes } from 'react-icons/fa';
 import { FiMapPin } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../firebase';
+
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [contact, setContact] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
   const navItems = [
     { label: 'Anasayfa', path: '/' },
     { label: 'Kurumsal', path: '/kurumsal' },
@@ -13,12 +19,28 @@ const Header = () => {
     { label: 'İletişim', path: '/iletisim' },
   ];
   const navigate = useNavigate();
+
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const fetchContact = async () => {
+      try {
+        const docRef = doc(db, 'settings', 'iTtajZ3oqFmT8PpdYQKI');
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setContact(docSnap.data());
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchContact();
   }, []);
 
   const headerVariants = {
@@ -91,13 +113,15 @@ const Header = () => {
 
           {/* Desktop Action Buttons */}
           <div className="hidden items-center space-x-6 md:flex">
-            <a
-              href="tel:+905555555555"
-              className="group flex items-center space-x-2 rounded-full bg-[#d25483] px-6 py-2.5 text-white transition-all duration-300 hover:bg-[#ff3366] hover:shadow-lg"
-            >
-              <FaPhoneAlt className="transition-transform duration-300 group-hover:scale-110" />
-              <span>Randevu Al</span>
-            </a>
+            {contact?.social?.phone && (
+              <a
+                href={`tel:${contact.social.phone}`}
+                className="group flex items-center space-x-2 rounded-full bg-[#d25483] px-6 py-2.5 text-white transition-all duration-300 hover:bg-[#ff3366] hover:shadow-lg"
+              >
+                <FaPhoneAlt className="transition-transform duration-300 group-hover:scale-110" />
+                <span>Randevu Al</span>
+              </a>
+            )}
 
             <div className="flex items-center space-x-4">
               <a
@@ -108,14 +132,16 @@ const Header = () => {
               >
                 <FaInstagram size={24} />
               </a>
-              <a
-                href="https://www.google.com.tr/maps/place/Bella+Trix"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-700 transition-all duration-300 hover:text-[#d25483] hover:scale-110"
-              >
-                <FiMapPin size={24} />
-              </a>
+              {contact?.social?.googleMaps && (
+                <a
+                  href={contact.social.googleMaps}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-700 transition-all duration-300 hover:text-[#d25483] hover:scale-110"
+                >
+                  <FiMapPin size={24} />
+                </a>
+              )}
             </div>
           </div>
 
@@ -168,13 +194,15 @@ const Header = () => {
               </nav>
 
               <div className="mt-auto space-y-6">
-                <a
-                  href="tel:+905555555555"
-                  className="flex items-center justify-center space-x-2 rounded-full bg-[#d25483] px-6 py-3 text-white transition-all duration-300 hover:bg-[#ff3366] hover:shadow-lg"
-                >
-                  <FaPhoneAlt />
-                  <span>Randevu Al</span>
-                </a>
+                {contact?.social?.phone && (
+                  <a
+                    href={`tel:${contact.social.phone}`}
+                    className="flex items-center justify-center space-x-2 rounded-full bg-[#d25483] px-6 py-3 text-white transition-all duration-300 hover:bg-[#ff3366] hover:shadow-lg"
+                  >
+                    <FaPhoneAlt />
+                    <span>Randevu Al</span>
+                  </a>
+                )}
 
                 <div className="flex items-center justify-center space-x-6">
                   <a
@@ -185,14 +213,16 @@ const Header = () => {
                   >
                     <FaInstagram size={28} />
                   </a>
-                  <a
-                    href="https://www.google.com.tr/maps/place/Bella+Trix"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-gray-700 transition-all duration-300 hover:text-[#d25483] hover:scale-110"
-                  >
-                    <FiMapPin size={28} />
-                  </a>
+                  {contact?.social?.googleMaps && (
+                    <a
+                      href={contact.social.googleMaps}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-gray-700 transition-all duration-300 hover:text-[#d25483] hover:scale-110"
+                    >
+                      <FiMapPin size={28} />
+                    </a>
+                  )}
                 </div>
               </div>
             </div>

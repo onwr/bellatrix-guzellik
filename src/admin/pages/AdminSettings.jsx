@@ -1,278 +1,157 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { toast } from 'react-hot-toast';
 
+const SETTINGS_DOC_ID = 'iTtajZ3oqFmT8PpdYQKI';
+const CATALOGS_DOC_ID = 'catalogs';
+
 const AdminSettings = () => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [settings, setSettings] = useState({
-    siteTitle: '',
-    siteDescription: '',
-    metaKeywords: '',
-    contactEmail: '',
-    maintenanceMode: false,
-    appointmentSettings: {
-      minNoticeHours: 24,
-      maxFutureDays: 30,
-      slotDuration: 30,
-      workingHours: {
-        start: '09:00',
-        end: '18:00'
-      }
+  const [contact, setContact] = useState({
+    address: '',
+    phones: [],
+    email: '',
+    workingHours: [],
+    social: {
+      instagram: '',
+      whatsapp: '',
+      phone: '',
+      googleMaps: '',
+      yandex: '',
+      apple: '',
     },
-    notificationSettings: {
-      emailNotifications: true,
-      smsNotifications: false,
-      appointmentReminders: true
-    }
   });
+  const [catalogs, setCatalogs] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const docRef = doc(db, 'settings', 'general');
-        const docSnap = await getDoc(docRef);
-        
-        if (docSnap.exists()) {
-          setSettings(docSnap.data());
-        }
-      } catch (error) {
-        toast.error('Ayarlar yüklenirken bir hata oluştu');
+        const contactSnap = await getDoc(doc(db, 'settings', SETTINGS_DOC_ID));
+        const catalogsSnap = await getDoc(doc(db, 'settings', CATALOGS_DOC_ID));
+        if (contactSnap.exists()) setContact(contactSnap.data());
+        if (catalogsSnap.exists()) setCatalogs(catalogsSnap.data().catalogs ?? []);
       } finally {
         setIsLoading(false);
       }
     };
-
     fetchSettings();
   }, []);
 
-  const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    const inputValue = type === 'checkbox' ? checked : value;
-
-    if (name.includes('.')) {
-      const [parent, child] = name.split('.');
-      setSettings(prev => ({
+  const handleContactChange = (e) => {
+    const { name, value } = e.target;
+    if (name.startsWith('social.')) {
+      const key = name.split('.')[1];
+      setContact(prev => ({
         ...prev,
-        [parent]: {
-          ...prev[parent],
-          [child]: inputValue
-        }
+        social: { ...prev.social, [key]: value },
+      }));
+    } else if (name === 'phones' || name === 'workingHours') {
+      setContact(prev => ({
+        ...prev,
+        [name]: value.split('\n').filter(Boolean),
       }));
     } else {
-      setSettings(prev => ({
-        ...prev,
-        [name]: inputValue
-      }));
+      setContact(prev => ({ ...prev, [name]: value }));
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleCatalogChange = (idx, field, value) => {
+    setCatalogs(prev =>
+      prev.map((cat, i) => (i === idx ? { ...cat, [field]: value } : cat))
+    );
+  };
+
+  const handleAddCatalog = () => {
+    setCatalogs(prev => [...prev, { label: '', href: '' }]);
+  };
+
+  const handleRemoveCatalog = (idx) => {
+    setCatalogs(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  const handleSave = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-
     try {
-      const docRef = doc(db, 'settings', 'general');
-      await updateDoc(docRef, settings);
-      toast.success('Ayarlar başarıyla güncellendi');
-    } catch (error) {
-      toast.error('Güncelleme sırasında bir hata oluştu');
+      await updateDoc(doc(db, 'settings', SETTINGS_DOC_ID), contact);
+      await updateDoc(doc(db, 'settings', CATALOGS_DOC_ID), { catalogs });
+      toast.success('Ayarlar kaydedildi');
+    } catch {
+      toast.error('Bir hata oluştu');
     } finally {
       setIsLoading(false);
     }
   };
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500"></div>
-      </div>
-    );
+    return <div className="text-center py-12">Yükleniyor...</div>;
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <h1 className="text-3xl font-bold text-gray-800 mb-8">Genel Ayarlar</h1>
-      
-      <form onSubmit={handleSubmit} className="space-y-8">
-        {/* Site Settings */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Site Ayarları</h2>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Site Başlığı</label>
-              <input
-                type="text"
-                name="siteTitle"
-                value={settings.siteTitle}
-                onChange={handleInputChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Site Açıklaması</label>
-              <textarea
-                name="siteDescription"
-                value={settings.siteDescription}
-                onChange={handleInputChange}
-                rows="3"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Meta Anahtar Kelimeler</label>
-              <input
-                type="text"
-                name="metaKeywords"
-                value={settings.metaKeywords}
-                onChange={handleInputChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500"
-                placeholder="Virgülle ayırarak yazın"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">İletişim E-postası</label>
-              <input
-                type="email"
-                name="contactEmail"
-                value={settings.contactEmail}
-                onChange={handleInputChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500"
-              />
-            </div>
-
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                name="maintenanceMode"
-                checked={settings.maintenanceMode}
-                onChange={handleInputChange}
-                className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
-              />
-              <label className="ml-2 block text-sm text-gray-700">Bakım Modu</label>
-            </div>
+    <form onSubmit={handleSave} className="space-y-8">
+      <div className="bg-white rounded-xl shadow p-6 space-y-6">
+        <h2 className="text-xl font-bold text-[#d25483] mb-4">İletişim Bilgileri</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="address" className="block font-medium mb-1">Adres</label>
+            <input id="address" name="address" value={contact.address} onChange={handleContactChange} placeholder="Adres" className="mt-1 p-2 outline-none focus:ring-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#d25483] focus:ring-[#d25483]" />
+          </div>
+          <div>
+            <label htmlFor="email" className="block font-medium mb-1">E-posta</label>
+            <input id="email" name="email" value={contact.email} onChange={handleContactChange} placeholder="E-posta" className="mt-1 p-2 outline-none focus:ring-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#d25483] focus:ring-[#d25483]" />
+          </div>
+          <div>
+            <label htmlFor="phones" className="block font-medium mb-1">Telefonlar (her satıra bir numara)</label>
+            <textarea id="phones" name="phones" value={contact.phones.join('\n')} onChange={handleContactChange} placeholder="Telefonlar (her satıra bir numara)" className="mt-1 p-2 outline-none focus:ring-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#d25483] focus:ring-[#d25483]" />
+          </div>
+          <div>
+            <label htmlFor="workingHours" className="block font-medium mb-1">Çalışma Saatleri (her satıra bir satır)</label>
+            <textarea id="workingHours" name="workingHours" value={contact.workingHours.join('\n')} onChange={handleContactChange} placeholder="Çalışma Saatleri (her satıra bir satır)" className="mt-1 p-2 outline-none focus:ring-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#d25483] focus:ring-[#d25483]" />
           </div>
         </div>
-
-        {/* Appointment Settings */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Randevu Ayarları</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Minimum Bildirim Süresi (Saat)</label>
-              <input
-                type="number"
-                name="appointmentSettings.minNoticeHours"
-                value={settings.appointmentSettings.minNoticeHours}
-                onChange={handleInputChange}
-                min="1"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Maksimum İleri Tarih (Gün)</label>
-              <input
-                type="number"
-                name="appointmentSettings.maxFutureDays"
-                value={settings.appointmentSettings.maxFutureDays}
-                onChange={handleInputChange}
-                min="1"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Randevu Süresi (Dakika)</label>
-              <input
-                type="number"
-                name="appointmentSettings.slotDuration"
-                value={settings.appointmentSettings.slotDuration}
-                onChange={handleInputChange}
-                min="15"
-                step="15"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Başlangıç Saati</label>
-                <input
-                  type="time"
-                  name="appointmentSettings.workingHours.start"
-                  value={settings.appointmentSettings.workingHours.start}
-                  onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Bitiş Saati</label>
-                <input
-                  type="time"
-                  name="appointmentSettings.workingHours.end"
-                  value={settings.appointmentSettings.workingHours.end}
-                  onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500"
-                />
-              </div>
-            </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label htmlFor="social.instagram" className="block font-medium mb-1">Instagram</label>
+            <input id="social.instagram" name="social.instagram" value={contact.social.instagram} onChange={handleContactChange} placeholder="Instagram" className="mt-1 p-2 outline-none focus:ring-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#d25483] focus:ring-[#d25483]" />
+          </div>
+          <div>
+            <label htmlFor="social.whatsapp" className="block font-medium mb-1">WhatsApp</label>
+            <input id="social.whatsapp" name="social.whatsapp" value={contact.social.whatsapp} onChange={handleContactChange} placeholder="WhatsApp" className="mt-1 p-2 outline-none focus:ring-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#d25483] focus:ring-[#d25483]" />
+          </div>
+          <div>
+            <label htmlFor="social.phone" className="block font-medium mb-1">Telefon (Randevu Al)</label>
+            <input id="social.phone" name="social.phone" value={contact.social.phone} onChange={handleContactChange} placeholder="Telefon (Randevu Al)" className="mt-1 p-2 outline-none focus:ring-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#d25483] focus:ring-[#d25483]" />
+          </div>
+          <div>
+            <label htmlFor="social.googleMaps" className="block font-medium mb-1">Google Maps</label>
+            <input id="social.googleMaps" name="social.googleMaps" value={contact.social.googleMaps} onChange={handleContactChange} placeholder="Google Maps" className="mt-1 p-2 outline-none focus:ring-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#d25483] focus:ring-[#d25483]" />
+          </div>
+          <div>
+            <label htmlFor="social.yandex" className="block font-medium mb-1">Yandex Navi</label>
+            <input id="social.yandex" name="social.yandex" value={contact.social.yandex} onChange={handleContactChange} placeholder="Yandex Navi" className="mt-1 p-2 outline-none focus:ring-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#d25483] focus:ring-[#d25483]" />
+          </div>
+          <div>
+            <label htmlFor="social.apple" className="block font-medium mb-1">Apple Maps</label>
+            <input id="social.apple" name="social.apple" value={contact.social.apple} onChange={handleContactChange} placeholder="Apple Maps" className="mt-1 p-2 outline-none focus:ring-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#d25483] focus:ring-[#d25483]" />
           </div>
         </div>
-
-        {/* Notification Settings */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Bildirim Ayarları</h2>
-          <div className="space-y-4">
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                name="notificationSettings.emailNotifications"
-                checked={settings.notificationSettings.emailNotifications}
-                onChange={handleInputChange}
-                className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
-              />
-              <label className="ml-2 block text-sm text-gray-700">E-posta Bildirimleri</label>
-            </div>
-
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                name="notificationSettings.smsNotifications"
-                checked={settings.notificationSettings.smsNotifications}
-                onChange={handleInputChange}
-                className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
-              />
-              <label className="ml-2 block text-sm text-gray-700">SMS Bildirimleri</label>
-            </div>
-
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                name="notificationSettings.appointmentReminders"
-                checked={settings.notificationSettings.appointmentReminders}
-                onChange={handleInputChange}
-                className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
-              />
-              <label className="ml-2 block text-sm text-gray-700">Randevu Hatırlatmaları</label>
-            </div>
+      </div>
+      <div className="bg-white rounded-xl shadow p-6 space-y-6">
+        <h2 className="text-xl font-bold text-[#d25483] mb-4">Kataloglar</h2>
+        {catalogs.map((cat, idx) => (
+          <div key={idx} className="flex gap-2 mb-2">
+            <input value={cat.label} onChange={e => handleCatalogChange(idx, 'label', e.target.value)} placeholder="Başlık" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#d25483] focus:ring-[#d25483] flex-1" />
+            <input value={cat.href} onChange={e => handleCatalogChange(idx, 'href', e.target.value)} placeholder="Bağlantı" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#d25483] focus:ring-[#d25483] flex-1" />
+            <button type="button" onClick={() => handleRemoveCatalog(idx)} className="px-3 py-1 bg-red-100 text-red-600 rounded hover:bg-red-200">Sil</button>
           </div>
-        </div>
-
-        <div className="flex justify-end">
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="px-6 py-2 bg-pink-600 text-white rounded-md hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2 disabled:opacity-50"
-          >
-            {isLoading ? 'Kaydediliyor...' : 'Kaydet'}
-          </button>
-        </div>
-      </form>
-    </div>
+        ))}
+        <button type="button" onClick={handleAddCatalog} className="px-4 py-2 bg-[#d25483] text-white rounded hover:bg-[#ff3366]">Katalog Ekle</button>
+      </div>
+      <div className="flex justify-end">
+        <button type="submit" className="px-6 py-2 bg-[#d25483] text-white rounded hover:bg-[#ff3366]">Kaydet</button>
+      </div>
+    </form>
   );
 };
 

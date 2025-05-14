@@ -1,8 +1,28 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { FaPhoneAlt, FaWhatsapp, FaMapMarkerAlt } from 'react-icons/fa';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../firebase';
 
 const FreeConsultation = () => {
+  const [contact, setContact] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchContact = async () => {
+      try {
+        const docRef = doc(db, 'settings', 'iTtajZ3oqFmT8PpdYQKI');
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setContact(docSnap.data());
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchContact();
+  }, []);
+
   const containerVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: {
@@ -24,8 +44,12 @@ const FreeConsultation = () => {
     },
   };
 
+  if (isLoading) {
+    return <div className="py-24 text-center">Yükleniyor...</div>;
+  }
+
   return (
-    <section className="relative  overflow-hidden bg-gradient-to-br from-[#d25483]/5 via-white to-[#d25483]/5 py-24 border-t border-black/50">
+    <section className="relative overflow-hidden bg-gradient-to-br from-[#d25483]/5 via-white to-[#d25483]/5 py-24 border-t border-black/50">
       <div className="container mx-auto px-4">
         <motion.div
           initial="hidden"
@@ -51,7 +75,7 @@ const FreeConsultation = () => {
           <div className="grid gap-8 md:grid-cols-3">
             {/* WhatsApp Button */}
             <motion.a
-              href="https://wa.me/905555555555"
+              href={contact?.social?.whatsapp ?? '#'}
               target="_blank"
               rel="noopener noreferrer"
               variants={buttonVariants}
@@ -67,7 +91,7 @@ const FreeConsultation = () => {
 
             {/* Phone Button */}
             <motion.a
-              href="tel:+905555555555"
+              href={contact?.social?.phone ? `tel:${contact.social.phone}` : '#'}
               variants={buttonVariants}
               whileHover="hover"
               className="group flex flex-col items-center gap-4 rounded-2xl bg-white p-8 text-center shadow-lg transition-all duration-300 hover:shadow-xl"
@@ -81,7 +105,7 @@ const FreeConsultation = () => {
 
             {/* Location Button */}
             <motion.a
-              href="https://maps.google.com"
+              href={contact?.social?.googleMaps ?? '#'}
               target="_blank"
               rel="noopener noreferrer"
               variants={buttonVariants}

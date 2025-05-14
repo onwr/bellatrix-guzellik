@@ -5,7 +5,7 @@ import FreeConsultation from '@components/FreeConsultation'
 import Services from '@components/Services'
 import Referances from '@components/Referances'
 import Footer from '@components/Footer'
-
+import Catalog from '@components/Catalog'
 const Home = () => {
   return (
     <div className="min-h-screen bg-white">
@@ -15,6 +15,7 @@ const Home = () => {
         <Services />
         <FreeConsultation />
         <Referances />
+        <Catalog />
       </main>
       <Footer />
     </div>

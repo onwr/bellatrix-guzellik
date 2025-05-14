@@ -1,34 +1,41 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import Header from '@components/Header';
 import Footer from '@components/Footer';
-const SERVICES = {
-  agda: {
-    title: 'Medikal Cilt Bakımı',
-    image: '/images/agda.jpg',
-    description:
-      'Medikal cilt bakımı, cildinizin ihtiyaçlarına özel olarak tasarlanmış profesyonel bir bakım hizmetidir. Bu işlem, cildinizin derinlemesine temizlenmesini, nemlenmesini ve yenilenmesini sağlar. Hizmetlerimiz şunları içerir: Derin cilt temizliği, Akne tedavisi, Anti-aging bakımlar, Leke tedavisi, Cilt gençleştirme.',
-    benefits: [
-      'Cilt dokusunda iyileşme',
-      'Akne ve sivilcelerde azalma',
-      'Daha parlak ve canlı bir cilt',
-      'Cilt lekelerinde açılma',
-      'Kırışıklıklarda azalma',
-    ],
-    process: [
-      'Cilt analizi',
-      'Derin temizlik',
-      'Peeling uygulaması',
-      'Maske uygulaması',
-      'Nemlendirme',
-    ],
-  },
-  // Diğer hizmetler eklenebilir
-};
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../firebase';
 
 const ServicesDetail = () => {
   const { serviceId } = useParams();
-  const service = SERVICES[serviceId] ?? SERVICES['agda'];
+  const [service, setService] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchService = async () => {
+      try {
+        const docRef = doc(db, 'services', serviceId);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setService(docSnap.data());
+        } else {
+          setService(null);
+        }
+      } catch (error) {
+        setService(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchService();
+  }, [serviceId]);
+
+  if (isLoading) {
+    return <div className="py-24 text-center">Yükleniyor...</div>;
+  }
+
+  if (!service) {
+    return <div className="py-24 text-center">Hizmet bulunamadı.</div>;
+  }
 
   return (
     <div>
@@ -42,8 +49,7 @@ const ServicesDetail = () => {
           <div className='mb-2 text-sm text-white/80'>&lt; Hizmetler</div>
           <h1 className='mb-2 text-4xl font-bold text-white'>{service.title}</h1>
           <p className='text-lg text-white/90'>
-            Cildinizin ihtiyaçlarına özel tasarlanmış profesyonel bakım hizmetleri ile cildinizi
-            yenileyin.
+            Cildinizin ihtiyaçlarına özel tasarlanmış profesyonel bakım hizmetleri ile cildinizi yenileyin.
           </p>
         </div>
       </div>
@@ -57,7 +63,7 @@ const ServicesDetail = () => {
           <div className='rounded-xl border border-black/10 bg-[#d25483]/5 p-6'>
             <h3 className='mb-4 text-lg font-semibold'>Faydaları</h3>
             <ul className='list-inside list-disc space-y-2 text-gray-700'>
-              {service.benefits.map((b) => (
+              {service.benefits?.map((b) => (
                 <li key={b}>{b}</li>
               ))}
             </ul>
@@ -69,7 +75,7 @@ const ServicesDetail = () => {
         <div className='mx-auto container px-6'>
           <h2 className='mb-8 text-center text-2xl font-bold'>Uygulama Süreci</h2>
           <div className='grid grid-cols-1 gap-6 sm:grid-cols-3 md:grid-cols-5'>
-            {service.process.map((step, i) => (
+            {service.process?.map((step, i) => (
               <div
                 key={step}
                 className='flex flex-col items-center rounded-xl bg-[#d25483]/30 p-6 shadow'

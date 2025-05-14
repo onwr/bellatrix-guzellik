@@ -1,8 +1,28 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { FaPhoneAlt, FaArrowRight } from 'react-icons/fa';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../firebase';
 
 const Hero = () => {
+  const [contact, setContact] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchContact = async () => {
+      try {
+        const docRef = doc(db, 'settings', 'iTtajZ3oqFmT8PpdYQKI');
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setContact(docSnap.data());
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchContact();
+  }, []);
+
   // Animation variants
   const textVariants = {
     hidden: { opacity: 0, y: 20 },
@@ -72,13 +92,15 @@ const Hero = () => {
               <FaArrowRight className="transition-transform duration-300 group-hover:translate-x-1" />
             </a>
 
-            <a
-              href="tel:+905555555555"
-              className="group flex items-center gap-3 rounded-full bg-[#d25483] px-8 py-4 text-lg font-medium text-white transition-all duration-300 hover:bg-[#ff3366] hover:shadow-xl"
-            >
-              <FaPhoneAlt className="transition-transform duration-300 group-hover:scale-110" />
-              <span>Hemen Randevu Al</span>
-            </a>
+            {!isLoading && contact?.social?.phone && (
+              <a
+                href={`tel:${contact.social.phone}`}
+                className="group flex items-center gap-3 rounded-full bg-[#d25483] px-8 py-4 text-lg font-medium text-white transition-all duration-300 hover:bg-[#ff3366] hover:shadow-xl"
+              >
+                <FaPhoneAlt className="transition-transform duration-300 group-hover:scale-110" />
+                <span>Hemen Randevu Al</span>
+              </a>
+            )}
           </motion.div>
 
         </div>
