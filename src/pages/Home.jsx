@@ -14,7 +14,6 @@ const Home = () => {
         <Hero />
         <Services />
         <FreeConsultation />
-        <Referances />
         <Catalog />
       </main>
       <Footer />

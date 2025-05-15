@@ -10,18 +10,19 @@ const TABS = [
     icon: <FaRegBuilding />,
     content: (
       <div>
-        <h2 className="text-2xl font-bold mb-4 text-center md:text-left">Elegance Concept Hakkında</h2>
+        <h2 className="text-2xl font-bold mb-4 text-center md:text-left">Bella Trix Güzellik Salonu Hakkında</h2>
         <p className="mb-4 text-gray-700">
-          2024 yılından bu yana kuşadası hazır kapı, kuşadası iç kapı, kuşadası iç hazır kapı, kuşadası yangına dayanıklı kapı, kuşadası hazır kapak, mutfak banyo hazır kapak sektöründe faaliyet gösteren firmamız, müşteri memnuniyetini esas alarak çalışmalarını sürdürmektedir.
+          2018 yılından bu yana Aydın'da profesyonel güzellik ve bakım hizmetleri sunan Bella Trix Güzellik Salonu, müşteri memnuniyetini her zaman ön planda tutarak sektörde öncü bir konuma gelmiştir.
         </p>
         <p className="mb-4 text-gray-700">
-          Modern üretim tesislerimizde, en son teknoloji ile üretim yaparak kaliteli ve güvenilir ürünler sunmaktayız.
+          Modern ve steril salonumuzda, son teknoloji cihazlar ve profesyonel ekibimizle en kaliteli hizmeti sunmaktayız.
         </p>
         <ul className="list-disc list-inside space-y-1 text-gray-700">
-          <li>Modern makine parkuru</li>
-          <li>Deneyimli üretim kadrosu</li>
-          <li>Kalite kontrol sistemleri</li>
-          <li>Ar-Ge çalışmaları</li>
+          <li>Uzman ve deneyimli kadro</li>
+          <li>Yüksek kaliteli ürün ve cihazlar</li>
+          <li>Steril ve hijyenik ortam</li>
+          <li>Kişiye özel bakım planları</li>
+          <li>Sürekli eğitim ve gelişim</li>
         </ul>
       </div>
     ),
@@ -34,7 +35,7 @@ const TABS = [
       <div>
         <h2 className="text-2xl font-bold mb-4 text-center md:text-left">Vizyonumuz</h2>
         <p className="text-gray-700">
-          Sektörümüzde yenilikçi, güvenilir ve lider bir marka olmak; müşteri memnuniyetini en üst seviyede tutmak ve sürdürülebilir başarıya ulaşmak.
+          Güzellik ve bakım sektöründe yenilikçi yaklaşımlarla standartları belirleyen, doğal ve sağlıklı güzelliği ön plana çıkaran, müşterilerimizin kendilerini özel ve değerli hissettiği bir marka olmak.
         </p>
       </div>
     ),
@@ -47,7 +48,7 @@ const TABS = [
       <div>
         <h2 className="text-2xl font-bold mb-4 text-center md:text-left">Misyonumuz</h2>
         <p className="text-gray-700">
-          Müşterilerimize kaliteli, yenilikçi ve güvenilir ürünler sunmak; çalışanlarımızın gelişimine katkı sağlamak ve topluma değer katmak.
+          Müşterilerimize kişiselleştirilmiş, yüksek kaliteli ve güvenilir güzellik hizmetleri sunmak; doğal güzelliği ön plana çıkaran yaklaşımımızla onların özgüvenini artırmak ve yaşam kalitesine katkı sağlamak.
         </p>
       </div>
     ),
@@ -60,11 +61,12 @@ const TABS = [
       <div>
         <h2 className="text-2xl font-bold mb-4 text-center md:text-left">Değerlerimiz</h2>
         <ul className="list-disc list-inside space-y-1 text-gray-700">
-          <li>Dürüstlük ve güven</li>
-          <li>Yenilikçilik</li>
-          <li>Müşteri odaklılık</li>
-          <li>Sürekli gelişim</li>
-          <li>Sosyal sorumluluk</li>
+          <li>Müşteri memnuniyeti</li>
+          <li>Profesyonellik ve uzmanlık</li>
+          <li>Güvenilirlik ve şeffaflık</li>
+          <li>Yenilikçilik ve sürekli gelişim</li>
+          <li>Kalite ve hijyen standartları</li>
+          <li>Doğal güzelliğe saygı</li>
         </ul>
       </div>
     ),
@@ -83,8 +85,8 @@ const Kurumsal = () => {
         <div className="container mx-auto px-4 pt-8">
           <div className="overflow-hidden rounded-3xl mb-8">
             <div
-              className="relative h-56 md:h-96 flex items-center justify-center"
-              style={{ backgroundImage: "url('/images/kurumsal.png')" }}
+              className="relative h-56 md:h-96 flex items-center justify-center bg-cover bg-center"
+              style={{ backgroundImage: "url('/images/salon.png')" }}
             >
               <div className="absolute inset-0 bg-black/50" />
               <h1 className="relative z-10 text-4xl md:text-5xl font-bold text-white text-center">Kurumsal</h1>
@@ -98,7 +100,7 @@ const Kurumsal = () => {
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
                 className={`flex items-center gap-2 px-6 py-2 rounded-full text-base font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#d25483] focus:ring-offset-2
-                  ${activeTab === tab.key ? 'bg-black text-white shadow' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
+                  ${activeTab === tab.key ? 'bg-[#d25483] text-white shadow' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
               >
                 {tab.icon}
                 {tab.label}
